@@ -45,10 +45,10 @@ XBee Pro S2B modules were used for testing, but the code and process should be a
 ### ThingSpeak
 *Under Development*
 
-# Software Dependencies
+## Software Dependencies
 There are a number of dependencies for each part of the software.
 
-## Arduino
+### Arduino
 There are no direct dependencies for the library, however the example file uses the following:
 
 - [MemoryFree](https://github.com/maniacbug/MemoryFree): For debugging purposes.
