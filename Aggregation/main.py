@@ -17,14 +17,16 @@ rxQueue = defaultdict(Queue)
 # run function, fn, on all items in iterable, it.
 def each(fn, it): [fn(i) for i in it]
 
+# print and pass on, use for inline debugging
+def inprint(x): print(x, end=''); return(x)
+
 def handle_data_rx(data):
-    each(rxQueue[data['source_addr_long']].put, data['rf_data'])
+    each(rxQueue[data['source_addr_long']].put, map(chr, data['rf_data']))
     print(data['source_addr_long'], rxQueue[data['source_addr_long']].qsize())
 
 def process_data():
     for addr in rxQueue:
         q = rxQueue[addr]
-        print
 
         # search for start char
         while (q.get() is not START_CH) and not q.empty(): pass
@@ -33,7 +35,8 @@ def process_data():
         ch = ""
         while (ch is not '\r') and not q.empty():
             ch = q.get()
-            print(ch)
+            print(ch, end='')
+        if not q.empty(): print()
 
 def find_port():
     return "/dev/tty.usbserial-DA01I3FX"
@@ -50,7 +53,7 @@ def init():
 def main():
     while True:
         try:
-            #process_data()
+            process_data()
             time.sleep(0.5)
         except KeyboardInterrupt:
             break
