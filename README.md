@@ -56,9 +56,9 @@ There are no direct dependencies for the library, however the example file uses 
 - [MPL3115A2](https://github.com/sparkfun/MPL3115A2_Breakout): Sparufun weather shield pressure sensor.
 
 ### Python
-> [sudo] pip install xbee
+> pip install xbee # may require sudo, might be pip3 not pip
 >
-> [sudo] pip install pyserial
+> pip install pyserial # may require sudo, might be pip3 not pip
 
 # Useful References
 http://blog.hcilab.org/gadgeteer/2012/12/xbee-zigbee-howto/
