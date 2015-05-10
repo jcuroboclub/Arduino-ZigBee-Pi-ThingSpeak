@@ -4,21 +4,35 @@ import serial
 import time
 from xbee import XBee, ZigBee
 
-#avail_ports = glob.glob('/dev/tty.*')
-#[print("[{0}] {1}".format(i, port)) for i, port in enumerate(avail_ports)]
-port = "/dev/tty.usbserial-DA01I3FX" # port = avail_ports[int(input('select: '))]
-print(port)
-os.system("cat " + port) # This helped clear port for me
-ser = serial.Serial(port, 9600)
-xbee = ZigBee(ser, escaped=True, callback=print)
+ser = None
+xbee = None
 
-while True:
+def find_port():
+    return "/dev/tty.usbserial-DA01I3FX"
+
+def init():
+    port = find_port()
+    baud = 9600
+    print("Listening on:", port, "at", baud, "baud")
+    os.system("cat " + port) # This cleared the port for me, good luck charm
+
+    ser = serial.Serial(port, 9600)
+    xbee = ZigBee(ser, escaped=True, callback=print)
+
+def main():
+    while True:
+        try:
+            time.sleep(0.001)
+        except KeyboardInterrupt:
+            break
+
+def end():
+    xbee.halt()
+    serial_port.close()
+
+if __name__ == "__main__":
+    init()
     try:
-        time.sleep(0.001)
-        #print(xbee.wait_read_frame())
-        #print('.')
-    except KeyboardInterrupt:
-        break
-
-xbee.halt()
-serial_port.close()
+        main()
+    finally:
+        end()
