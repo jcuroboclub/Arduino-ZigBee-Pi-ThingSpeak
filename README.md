@@ -44,3 +44,22 @@ XBee Pro S2B modules were used for testing, but the code and process should be a
 
 ### ThingSpeak
 *Under Development*
+
+## Software Dependencies
+There are a number of dependencies for each part of the software.
+
+### Arduino
+There are no direct dependencies for the library, however the example file uses the following:
+
+- [MemoryFree](https://github.com/maniacbug/MemoryFree): For debugging purposes.
+- [HTU21D](https://github.com/sparkfun/HTU21D_Breakout): Sparkfun weather shield humidity sensor.
+- [MPL3115A2](https://github.com/sparkfun/MPL3115A2_Breakout): Sparufun weather shield pressure sensor.
+
+### Python
+> pip install xbee # may require sudo, might be pip3 not pip
+>
+> pip install pyserial # may require sudo, might be pip3 not pip
+
+# Useful References
+http://blog.hcilab.org/gadgeteer/2012/12/xbee-zigbee-howto/
+http://serdmanczyk.github.io/XBeeAPI-PythonArduino-Tutorial/
