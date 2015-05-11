@@ -61,5 +61,5 @@ There are no direct dependencies for the library, however the example file uses 
 > pip install pyserial # may require sudo, might be pip3 not pip
 
 # Useful References
-http://blog.hcilab.org/gadgeteer/2012/12/xbee-zigbee-howto/
+http://blog.hcilab.org/gadgeteer/2012/12/xbee-zigbee-howto/  
 http://serdmanczyk.github.io/XBeeAPI-PythonArduino-Tutorial/
