@@ -1,9 +1,11 @@
 #! /usr/local/bin/python3
-import glob, os
+import os
+import glob
 import serial
 import time
 from collections import defaultdict
 from queue import Queue
+import re
 import json
 from pprint import pprint
 from xbee import XBee, ZigBee
@@ -49,7 +51,12 @@ def process_data():
                 payload += ch # simple and not so inefficient after all
                 # http://stackoverflow.com/questions/19926089/python-equivalent-of-java-stringbuffer
 
-            print("rx:", payload)
+            # add quotes to keys (proper JSON formatting)
+            payload = re.sub('([{,])([^{:\s"]*):',
+                             lambda m: '%s"%s":'%(m.group(1),m.group(2)),
+                             payload)
+            print(payload)
+            pprint(json.loads(payload))
 
 def find_port():
     return "/dev/tty.usbserial-DA01I3FX"
