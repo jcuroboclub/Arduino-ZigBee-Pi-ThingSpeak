@@ -30,7 +30,7 @@ const byte LIGHT = A1;
 const byte REFERENCE_3V3 = A3;
 
 // parameters
-const unsigned long UPDATE = 1000;//15500; // update interval, 15.5s (ThingSpeak preferred)
+const unsigned long UPDATE = 5000;//15500; // update interval, 15.5s (ThingSpeak preferred)
 const short N_SENSORS = 4;
 const short N_DUMPS = 2;
 
