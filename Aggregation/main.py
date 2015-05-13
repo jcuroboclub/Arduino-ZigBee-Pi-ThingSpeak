@@ -8,7 +8,12 @@ from queue import Queue
 import re
 import json
 from pprint import pprint
+import numpy as np
 from xbee import XBee, ZigBee
+import thingspeak as ts
+
+# Parameters
+api_keys = {37372: "BKSHA6VI5K13A6HL"}
 
 # Constants
 START_CH = '^'
@@ -18,6 +23,7 @@ END_CH = '\r'
 ser = None
 xbee = None
 rxQueue = defaultdict(Queue)
+channels = defaultdict(ts.channel)
 
 # run function, fn, on all items in iterable, it.
 def each(fn, it):
@@ -56,20 +62,46 @@ def process_data():
                              lambda m: '%s"%s":'%(m.group(1),m.group(2)),
                              payload)
             print(payload)
-            pprint(json.loads(payload))
+
+            def group_in_channels(d):
+                print(d[0]["channel"])
+                channels = np.unique(list(map(lambda x: x["channel"], d)))
+                print(channels)
+                grouped = {}
+                for c in channels:
+                    fields = map(lambda x: x["field"],
+                                 filter(lambda x: x["channel"] == c,
+                                        d))
+                    grouped[c] = [map(lambda x: x["data"],
+                                     filter(lambda x: x["field"] == f,
+                                            filter(lambda x: x["channel"] == c,
+                                                   d))).__next__()
+                                  if f in fields else None
+                                  for f in range(1,9)]
+                return grouped
+
+            payload = json.loads(payload)
+            grouped = group_in_channels(payload)
+            print(grouped)
+            for ch in grouped:
+                channels[ch].update(grouped[ch])
 
 def find_port():
     return "/dev/tty.usbserial-DA01I3FX"
 
 def init():
-    global xbee, ser
+    global xbee, ser, channels
     port = find_port()
     baud = 9600
     print("Listening on:", port, "at", baud, "baud")
-    os.system("cat " + port) # This cleared the port for me, good luck charm
+    #os.system("cat " + port) # This cleared the port for me, good luck charm
 
     ser = serial.Serial(port, 9600)
     xbee = ZigBee(ser, escaped=True, callback=handle_data_rx)
+
+    for ch in api_keys:
+        channels[ch] = ts.channel(api_keys[ch], None)
+    pprint(channels)
 
 def main():
     while True:

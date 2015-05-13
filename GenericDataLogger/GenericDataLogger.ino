@@ -37,13 +37,13 @@ const short N_DUMPS = 2;
 // Sensors
 const ReadingFnPointer sensors[] =
   {*getHumidityStr, *getTemperatureStr, *getPressureStr, *getLightStr};
-const int channels[] =
-  {1,               1,                  1,               1           };
+const unsigned int channels[] =
+  {37372,           37372,              37372,           37372       };
 const int fields[] =
   {1,               2,                  3,               4           };
 
 // other Constants
-const char READING_WIDTH = 10; // xxxxxx.xxx
+const char READING_WIDTH = 12; // xxxxxx.xxx
 const char READING_PRECISION = 3;
 
 // global vars
