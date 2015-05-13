@@ -2,7 +2,12 @@
  * Generic Data Logger example
  * A starting framework to make easy-to-manage dataloggers.
  *
- * Uses sparkfun weather shield.
+ * This exmaple uses sparkfun weather shield, but is simple to extend to other sensors.
+ * It will send data over Serial, using various formats (see the dump functions).
+ *
+ * Troubleshooting:
+ * - Check your paramters and constants. e.g., did you add or remove sensors or dumps?
+ *   Is N_SENSORS and N_DUMPS still the correct size?
  *
  * Created by Ashley Gillman, 09/05/15
 */
@@ -16,6 +21,8 @@
 #include "MPL3115A2.h" // Pressure sensor
 #include "HTU21D.h" // Humidity sensor
 
+#define DEBUG 1
+
 // pins
 const byte STAT1 = 7;
 const byte STAT2 = 8;
@@ -23,11 +30,20 @@ const byte LIGHT = A1;
 const byte REFERENCE_3V3 = A3;
 
 // parameters
-const unsigned long UPDATE = 15500; // update interval, 15.5s (ThingSpeak preferred)
+const unsigned long UPDATE = 5000;//15500; // update interval, 15.5s (ThingSpeak preferred)
 const short N_SENSORS = 4;
+const short N_DUMPS = 2;
+
+// Sensors
+const ReadingFnPointer sensors[] =
+  {*getHumidityStr, *getTemperatureStr, *getPressureStr, *getLightStr};
+const unsigned int channels[] =
+  {37372,           37372,              37372,           37372       };
+const int fields[] =
+  {1,               2,                  3,               4           };
 
 // other Constants
-const char READING_WIDTH = 10; // xxxxxx.xxx
+const char READING_WIDTH = 12; // xxxxxx.xxx
 const char READING_PRECISION = 3;
 
 // global vars
@@ -48,14 +64,14 @@ void setup() {
   setupSensors();
   
   // Configure DataLogger
-  dataLogger = DataLogger(N_SENSORS, READING_WIDTH, 1);
+  dataLogger = DataLogger(N_SENSORS, READING_WIDTH, N_DUMPS);
   // Configure data logger inputs
-  dataLogger.addReading(*getHumidityStr);
-  dataLogger.addReading(*getTemperatureStr);
-  dataLogger.addReading(*getPressureStr);
-  dataLogger.addReading(*getLightStr);
+  for (int i=0; i<N_SENSORS; ++i) {
+    dataLogger.addReading(sensors[i]);
+  }
   // configure data logger outputs
   dataLogger.addDump(*dumpToSerial);
+  dataLogger.addDump(*dumpToSerialJSON);
   
   Serial.println(" done.");
 }
@@ -138,15 +154,42 @@ void dumpToSerial(char* data, short height, short width) {
   Serial.println();
 }
 
+// Writes to Serial for ThingSpeak uploading
+// Start char: '^', end char: '\n', body is in JSON format.
+void dumpToSerialJSON(char* data, short height, short width) {
+  Serial.print("^[");
+  for (int i=0; i<height; ++i) {
+    //debugStats();
+    delay(5);
+    Serial.print(F("{channel: "));
+    Serial.print(channels[i]);
+    Serial.print(F(",field: "));
+    Serial.print(fields[i]);
+    Serial.print(F(",data: "));
+    for (int j=0; j<width; ++j) {
+      if (data[i*width+j] != ' ') // optional: omit whitespace
+        Serial.print(data[i*width+j]);
+    }
+    if (i<height-1)
+      Serial.print("},");
+    else
+      Serial.print('}');
+  }
+  Serial.println(']');
+}
+
+
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Debugging Code
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 void debugStats() {
-  Serial.print("FM: "); Serial.println(freeMemory());
-  check_mem();
-  Serial.print("HP: "); Serial.println((unsigned int) heapptr);
-  Serial.print("SP: "); Serial.println((unsigned int) stackptr);
+  if (DEBUG) {
+    Serial.print("FM: "); Serial.println(freeMemory());
+    check_mem();
+    Serial.print("HP: "); Serial.println((unsigned int) heapptr);
+    Serial.print("SP: "); Serial.println((unsigned int) stackptr);
+  }
 }
   
 
