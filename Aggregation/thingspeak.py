@@ -29,7 +29,6 @@ class channel(object):
         # so that callers get a prompt error if they supply an arg `update` cannot handle
         named_args = non_null_values(lat=lat, long=long, elevation=elevation, status=status)
         params = urllib.urlencode(non_null_in_dict(zip(field_keys, field_vals)) + [('key', self.write_key)] + named_args)
-        print(params)
         conn = httplib.HTTPConnection("api.thingspeak.com:80")
         conn.request("POST", "/update", params, headers)
         response = conn.getresponse()
