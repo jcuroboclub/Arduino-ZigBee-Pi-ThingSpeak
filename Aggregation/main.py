@@ -94,6 +94,7 @@ def process_data():
             for ch in grouped:
                 if ch in channels:
                     channels[ch].update(grouped[ch])
+            print(grouped)
 
 def find_port():
     return "/dev/tty.usbserial-DA01I3FX"

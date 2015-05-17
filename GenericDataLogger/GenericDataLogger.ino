@@ -28,19 +28,21 @@ const byte STAT1 = 7;
 const byte STAT2 = 8;
 const byte LIGHT = A1;
 const byte REFERENCE_3V3 = A3;
+const byte SOUND = A0;
 
 // parameters
-const unsigned long UPDATE = 5000;//15500; // update interval, 15.5s (ThingSpeak preferred)
-const short N_SENSORS = 4;
+const unsigned long UPDATE = 15500; // update interval, 15.5s (ThingSpeak preferred)
+const unsigned int SOUND_UPDATE = 1000;
+const short N_SENSORS = 5;
 const short N_DUMPS = 2;
 
 // Sensors
 const ReadingFnPointer sensors[] =
-  {*getHumidityStr, *getTemperatureStr, *getPressureStr, *getLightStr};
+  {*getHumidityStr, *getTemperatureStr, *getPressureStr, *getLightStr, *getSoundStr};
 const unsigned int channels[] =
-  {37372,           37372,              37372,           37372       };
+  {37372,           37372,              37372,           37372,        37372       };
 const int fields[] =
-  {1,               2,                  3,               4           };
+  {1,               2,                  3,               4,            5           };
 
 // other Constants
 const char READING_WIDTH = 12; // xxxxxx.xxx
@@ -49,9 +51,13 @@ const char READING_PRECISION = 3;
 // global vars
 uint8_t * heapptr, * stackptr;
 unsigned long lastUpdate; //The millis counter to see when a second rolls by
+unsigned long lastSoundUpdate;
+unsigned long soundSum;
+unsigned int soundCount;
 MPL3115A2 pressure;
 HTU21D humidity;
 DataLogger dataLogger;
+unsigned long sound_pres = 0;
 
 void setup() {
   // General setup
@@ -78,15 +84,22 @@ void setup() {
 
 void loop() {
   // Every UPDATE milliseconds, or on millis overflow, update again
-  if ((millis() - lastUpdate >= UPDATE) || lastUpdate > millis() )
-  {
+  if ( (millis() - lastUpdate >= UPDATE) || (lastUpdate > millis()) ) {
     digitalWrite(STAT1, HIGH); // Blink stat LED
-    lastUpdate += UPDATE;
-    dataLogger.takeReadings(); // update
-    dataLogger.dumpReadings(); // write out
+    lastUpdate += UPDATE; // update timer
+    lastSoundUpdate = lastUpdate;
     
-    debugStats(); // Optional debugging
+    dataLogger.takeReadings(); // update readings from sensors
+    dataLogger.dumpReadings(); // write out to XBee
+    
+    //debugStats(); // Optional debugging
     digitalWrite(STAT1, LOW); // Turn off stat LED
+  }
+  // Every SOUND_UPDATE milliseconds, or on millis overflow, update again
+  else if ((millis() - lastSoundUpdate >= SOUND_UPDATE) || lastSoundUpdate > millis() ) {
+    lastSoundUpdate += SOUND_UPDATE;
+    soundSum += analogRead(SOUND);
+    soundCount += 1;
   }
 }
 
@@ -127,6 +140,12 @@ void getLightStr(char *buf) {
   lightSensor = operatingVoltage * lightSensor;
   
   dtostrf(lightSensor, READING_WIDTH, READING_PRECISION, buf);
+}
+
+void getSoundStr(char *buf) {
+  dtostrf((float)soundSum / (float)soundCount, READING_WIDTH, READING_PRECISION, buf);
+  soundSum = 0;
+  soundCount = 0;
 }
 
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
