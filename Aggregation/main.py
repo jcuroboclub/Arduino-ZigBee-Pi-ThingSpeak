@@ -5,6 +5,7 @@ import serial
 import time
 from collections import defaultdict
 from queue import Queue
+from copy import deepcopy
 import re
 import json
 from pprint import pprint
@@ -13,7 +14,10 @@ from xbee import XBee, ZigBee
 import thingspeak as ts
 
 # Parameters
-api_keys = {37372: "BKSHA6VI5K13A6HL"}
+api_keys = {
+    37372: "BKSHA6VI5K13A6HL",
+    38007: "8BXAPC55OULDOZ9O"
+}
 
 # Constants
 START_CH = '^'
@@ -35,10 +39,12 @@ def inprint(x): print(x, end=''); return(x)
 # rx data and queue into a chr buffer
 def handle_data_rx(data):
     each(rxQueue[data['source_addr_long']].put, map(chr, data['rf_data']))
-    print("    from: ", data['source_addr_long'], "raw", data['rf_data'])
+    #print("    from: ", data['source_addr_long'], "raw", data['rf_data'])
 
 def process_data():
-    for addr in rxQueue:
+    # rxQueue is subject to change, use list() in order to prevent
+    # RuntimeError: dictionary changed size during iteration
+    for addr in list(rxQueue):
         q = rxQueue[addr]
 
         # search for start char
@@ -51,9 +57,9 @@ def process_data():
             # compile message
             ch = ""
             payload = ""
-            while (ch is not END_CH) and not q.empty():
+            while not q.empty() and (ch is not END_CH):
                 ch = q.get()
-                print(ch, end='')
+                #print(ch, end='')
                 payload += ch # simple and not so inefficient after all
                 # http://stackoverflow.com/questions/19926089/python-equivalent-of-java-stringbuffer
 
@@ -61,12 +67,9 @@ def process_data():
             payload = re.sub('([{,])([^{:\s"]*):',
                              lambda m: '%s"%s":'%(m.group(1),m.group(2)),
                              payload)
-            print(payload)
 
             def group_in_channels(d):
-                print(d[0]["channel"])
                 channels = np.unique(list(map(lambda x: x["channel"], d)))
-                print(channels)
                 grouped = {}
                 for c in channels:
                     fields = map(lambda x: x["field"],
@@ -80,11 +83,18 @@ def process_data():
                                   for f in range(1,9)]
                 return grouped
 
-            payload = json.loads(payload)
+            print(payload)
+            try:
+                payload = json.loads(payload)
+            except ValueError as e:
+                print("Corrupt Packet?")
+                continue
             grouped = group_in_channels(payload)
-            print(grouped)
+            #print(grouped)
             for ch in grouped:
-                channels[ch].update(grouped[ch])
+                if ch in channels:
+                    channels[ch].update(grouped[ch])
+            print(grouped)
 
 def find_port():
     return "/dev/tty.usbserial-DA01I3FX"
